@@ -2,7 +2,7 @@
 //
 
 #include "stdafx.h"
-
+#include "CPUSort.h"
 
 template<int size>
 void storeData(int *&output, __m256i (&data)[size])

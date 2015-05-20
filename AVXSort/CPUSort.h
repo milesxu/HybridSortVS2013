@@ -1,15 +1,16 @@
-
-#include <immintrin.h>
-#include <xmmintrin.h>
+#include "stdafx.h"
 
 const int rUnit = 8;
 const int bufferSize = 128;
 
-extern "C" void AVXBitonicSort(int *input, int *output, int length);
-extern "C" void OddCopy(int *input, int *output, int length);
-// extern "C" void AVXMergeSort(int *input, int *output, size_t totalLen,
-//     size_t unitlen, int a, int b);
-extern "C" void AVXMergeSort(int *input, int *output, int len1, int len2);
+extern "C"
+{
+	void AVXBitonicSort(int *input, int *output, int length);
+	void OddCopy(int *input, int *output, int length);
+	void AVXMergeSort(int *input, int *output, int len1, int len2);
+	void AVXMergeSortEnd(int *input, int *output, int len1, int len2);
+	void CoreSortStage1(int *input, int *output, size_t len);
+}
 
 template<int size>
 void loadData(int *&input, __m256i (&data)[size])
