@@ -2,8 +2,9 @@
 #include "util.h"
 
 
-DataHelper::DataHelper(unsigned long seed, size_t N, int low, int high,
-					   bool check): length(N), engine(seed), dist(low, high)
+DataHelper::DataHelper(unsigned long seed, size_t N, size_t low, size_t high,
+					   bool check): length(N), engine(seed),
+									dist((int)low, (int)high)
 {
 	if (check)
 		data = new int[N];
@@ -60,3 +61,18 @@ bool DataHelper::checkResult(int *arr)
 	return true;
 
 }
+
+template <typename T> void DataHelper::outputData(T *arr)
+{
+	size_t j = 0;
+	std::for_each(stdext::make_checked_array_iterator(arr, length, 0),
+				  stdext::make_checked_array_iterator(arr, length, length),
+				  [&](T i){
+					  std::cout << std::setw(3) << i << " ";
+					  j++;
+					  if (j % 8 == 0)
+						  std::cout << std::endl;
+				  });
+}
+
+template void DataHelper::outputData<int>(int *arr);

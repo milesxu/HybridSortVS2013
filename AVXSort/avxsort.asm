@@ -564,7 +564,12 @@ CoreSortStage1 PROC
     mov   r13, rdx		;output address backup
     mov   r14, r8		;total length backup
     lzcnt rax, r8		;get the leading zero bits in r8, store into rax
-    mov   rbx, 64		
+    popcnt rbx,r8       ;if num in r8 is power of 2, then rbx <- 1
+    cmp   rbx, 1        ;if num is not power of 2, then get the min power of 2
+    je    BitsSet       ;that greater than it. So rbx <- 63.
+    xor   rbx, rbx
+BitsSet:    
+    add   rbx, 63		
     sub   rbx, rax		;get the loop times needed
     test  rbx, 1		;decide whether need input address equal output address in FirstStep
     jz    FirstStep
