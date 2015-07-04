@@ -496,19 +496,23 @@ CLoopJudge:
     ja    CMergeLoop
 ENDM
 
+
+
 .data
-align 16
+;align 32
+CPUAVXSORT SEGMENT ALIGN(32) 'DATA'
 invertp dword 7, 6, 5, 4, 3, 2, 1, 0
 lindex  dword 0, 4, 8, 12, 0, 0, 0, 0
 rindex  dword 0, 0, 0, 0, 0, 4, 8, 12
 masknum dword 0, 0, 0, 0, 80000000h, 80000000h, 80000000h, 80000000h
 masklf  dword 80000000h, 80000000h, 80000000h, 80000000h, 0, 0, 0, 0
+CPUAVXSORT ENDS
 
 .code
 
 ;rcx input address, rdx output address, r8 total length which is already 
 ;divided by 64
-align 16
+;align 32
 AVXBitonicSort PROC
     cmp r8, 1
     je  OnlyOne
@@ -522,7 +526,7 @@ AVXBitonicSort ENDP
 
 ;rcx input address, rdx output address, r8 length of one list, r9 length of 
 ;the other list
-align 16
+;align 32
 AVXMergeSort PROC uses r12		
     ; shl     r8,   2  	;byte length of input 1
     ; shl     r9,   2	;byte length of input 2 which follow input 1
@@ -532,7 +536,7 @@ AVXMergeSort ENDP
 
 ;rcx input address, rdx output address, r8 length of one list, r9 length of 
 ;the other list, the last time in loop
-align 16
+;align 32
 AVXMergeSortEnd PROC uses r12		
     ; shl     r8,   2  	;byte length of input 1
     ; shl     r9,   2	;byte length of input 2 which follow input 1
@@ -541,7 +545,7 @@ AVXMergeSortEnd PROC uses r12
 AVXMergeSortEnd ENDP
 
 ;rcx input address, rdx output address, r8 length of copy bytes
-align 16
+;align 32
 OddCopy PROC
     mov rax,  r8
     shr rax,  6
@@ -556,8 +560,8 @@ CopyLoop:
 OddCopy ENDP
 
 ;rcx input address, rdx output address, r8 total length
-align 16
-CoreSortStage1 PROC
+;align 32
+CoreSortStage1 PROC uses rbx r12 r13 r14 r15 ;r9 r10 r11 rbp rdi rsi rcx rdx r8 rax r14 
     sub   rsp, 28h
     shr   r8,  6  		;divide by 64
     mov   r12, rcx		;input address backup
@@ -579,6 +583,7 @@ BitsSet:
 FirstStep:
     call  AVXBitonicSort
     add   rsp, 28h
+    ;jmp   CTerminal
     cmp   r14, 1
     je    CTerminal 	;only 64 items, sort complete.
     mov   r15, r14		;backup of num of blocks to be merged.
@@ -611,8 +616,10 @@ CTerminal:
     ret
 CoreSortStage1 ENDP
 
-align 16
+;align 32
 CoreSortStage2 PROC
 CoreSortStage2 ENDP
 
 end
+
+

@@ -5,10 +5,14 @@
 
 #pragma once
 
+#define NOMINMAX
+
 #include "targetver.h"
 
-#include <stdio.h>
+#include <malloc.h>
+//#include <stdio.h>
 #include <tchar.h>
+#include <omp.h>
 #include <iostream>
 #include <random>
 #include <unordered_set>
@@ -19,7 +23,17 @@
 #include <immintrin.h>
 #include <xmmintrin.h>
 #include <vector>
+#include <cstdlib>
+#include <chrono>
+#include <functional>
+#include <numeric>
+#include <ratio>
+#include <cstdint>
+#include <map>
+#include <boost/iterator/counting_iterator.hpp>
+#include <boost/align/aligned_allocator.hpp>
 
+#include <windows.h>
 
 
 

@@ -18,3 +18,8 @@ public:
 	template <typename T> void outputData(T *arr);
 };
 
+size_t getUnitLengthPerCore();
+void resultTiming(int testTime, int *data, size_t length,
+				  std::function<void (int *, int *)> sortF);
+void resultTimingWin(int testTime, int *data, size_t length,
+				  std::function<void (int *, int *)> sortF);
