@@ -1,53 +1,83 @@
 #include "stdafx.h"
+#include "util.h"
+#include "CPUSort.h"
 
+extern template void DataHelper::outputData<int>(int *arr);
+
+void avxParamTest()
+{
+    auto a = new int(1), b = new int(2), c = new int(3), d = new int(4);
+    auto e = new int(5);
+    auto h = true;
+    std::cout << e << std::endl;
+    //std::cout << *MergeUseAVX(a, b, c, d, e, false, true) << std::endl;
+    /*if (MergeUseAVX(a, b, c, d, e))
+    {
+        std::cout << "success" << std::endl;
+    }
+    else
+    {
+        std::cout << "fail" << std::endl;
+    }*/
+    //std::cout << +MergeUseAVX(a, b, c, d, e, false, true) << std::endl;
+}
+
+void avxMergeTest()
+{
+    auto n = 64;
+    std::random_device rd;
+    std::mt19937 mt(rd());
+    aligened_vector a(n << 1), b, c;
+    std::iota(a.begin(), a.end(), 0);
+    std::shuffle(a.begin(), a.end(), mt);
+    std::copy(a.begin(), a.begin() + n, std::back_inserter(b));
+    std::copy(a.begin() + n, a.end(), std::back_inserter(c));
+    std::sort(b.begin(), b.end());
+    std::sort(c.begin(), c.end());
+    MergeUseAVX(b.data(), b.data() + n, c.data(), c.data() + n, a.data(), 
+        true, true);
+    std::cout << std::is_sorted(a.begin(), a.end()) << std::endl;
+    auto i = 0;
+    for (auto j : a)
+    {
+        std::cout << j << std::setw(3) << " ";
+        ++i;
+        if (i % 8 == 0)
+            std::cout << std::endl;
+    }
+}
+
+void extractTest()
+{
+    aligened_vector a(16);
+    std::iota(a.begin(), a.end(), 0);
+    auto ymm = _mm256_load_si256(reinterpret_cast<__m256i *>(a.data()));
+    auto xmm = _mm256_extracti128_si256(ymm, 1);
+    auto end = _mm_extract_epi32(xmm, 3);
+    std::cout << end << std::endl;
+}
 
 int _tmain(int argc, _TCHAR* argv[])
 {
-    const int N = rUnit * rUnit * 2;
-    const int arr = rUnit;
-    int *input = (int *)_mm_malloc(N * sizeof(int), 32);
-    // int *output = (int *)_mm_malloc(N * sizeof(int), 32);
-    std::mt19937 engine(2014120421);
-    std::uniform_int_distribution<> dist(0, 1000);
-    std::for_each(input, input + N, [&](int &i){ i = dist(engine); });
-    // __m256i data[arr];
-    // int *temp = input;
-    // loadData<arr>(temp, data);
-
-    auto num = 0;
-    std::for_each(input, input + N, [&](int i){
-        std::cout << std::setw(3) << i << " ";
-        num += 1;
-        if (num % 8 == 0)
-            std::cout << std::endl;
-    });
-    std::cout << std::endl;
-    // temp = output;
-    // bitonicSort<arr>(data, temp);
-    //storeData<arr>(temp, data);
+    const auto N = 1 << 16;
+    //const auto arr = rUnit;
+    auto input = static_cast<int *>(_mm_malloc(N * sizeof(int), 32));
+    DataHelper dh(2014120421, N, 0, N * 2, true);
+    dh.generateData(input);
+    //std::cout << "sort begin" << std::endl;
     //AVXSort(input, N);
-    //std::cout << "sort complete." << std::endl;
     //AVXBitonicSort(input, input, N >> 6);
-    AVXBitonicSort(input, input, 2);
-    num = 0;
-    std::for_each(input, input + N, [&](int i){
-        std::cout << std::setw(3) << i << " ";
-        num += 1;
-        if (num % 8 == 0)
-            std::cout << std::endl;
-    });
-    std::cout << std::endl;
-    int *output = (int *)_mm_malloc(N * sizeof(int), 32);
-    // AVXMergeSort(input, output, 64, 64, 0, 0);
-    AVXMergeSort(input, output, 64 << 2, 64 << 2);
-    //OddCopy(input, output, N);
-    std::for_each(output, output + N, [&](int i){
-        std::cout << std::setw(3) << i << " ";
-        num += 1;
-        if (num % 8 == 0)
-            std::cout << std::endl;
-    });
+	//resultTiming(5, input, N, std::sort<int *>);
+	//resultTimingWin(5, input, N, std::sort<int *>);
+	//resultTimingWin(5, input, N, AVXSort);
+	ompAVXSort(input, input + N);
+    dh.checkResult(input);
+    //avxParamTest();
+    //avxMergeTest();
+    std::cout << "sort complete." << std::endl;
+    extractTest();
+    //dh.outputData(input);
     _mm_free(input);
-    _mm_free(output);
+
     return 0;
 }
