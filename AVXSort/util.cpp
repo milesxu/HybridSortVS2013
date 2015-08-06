@@ -9,7 +9,7 @@ DataHelper::DataHelper(unsigned long seed, size_t N, size_t low, size_t high,
     if (check)
         data = new int[N];
     else
-        data = NULL;
+        data = nullptr;
 }
 
 DataHelper::~DataHelper()
@@ -44,7 +44,8 @@ bool DataHelper::checkResult(int *arr)
         for (size_t i = 0; i < length; i++) {
             if (data[i] != arr[i])
             {
-                std::cout << "sort result check failed!" << std::endl;
+                std::cout << "checked sort result check failed at " 
+                    << i << "!" << std::endl;
                 return false;
             }
         }
@@ -53,7 +54,8 @@ bool DataHelper::checkResult(int *arr)
         for (size_t i = 0; i < length - 1; i++) {
             if (arr[i] > arr[i + 1])
             {
-                std::cout << "sort result check failed!" << std::endl;
+                std::cout << "unchecked sort result check failed at "
+                    << i << "!" << std::endl;
                 return false;
             }
         }
@@ -81,9 +83,10 @@ size_t getUnitLengthPerCore()
 {
     DWORD buff_size = 0;
     size_t cacheByte = 0;
-    SYSTEM_LOGICAL_PROCESSOR_INFORMATION *buff = NULL;
-    GetLogicalProcessorInformation(NULL, &buff_size);
-    buff = (SYSTEM_LOGICAL_PROCESSOR_INFORMATION *)malloc(buff_size);
+    SYSTEM_LOGICAL_PROCESSOR_INFORMATION *buff = nullptr;
+    GetLogicalProcessorInformation(nullptr, &buff_size);
+    buff = static_cast<SYSTEM_LOGICAL_PROCESSOR_INFORMATION *>
+        (malloc(buff_size));
     GetLogicalProcessorInformation(&buff[0], &buff_size);
     for (size_t i = 0;
          i < buff_size / sizeof(SYSTEM_LOGICAL_PROCESSOR_INFORMATION); i++) {
@@ -121,11 +124,11 @@ void resultTiming(int testTime, int *data, size_t length,
 					   //std::cout << std::chrono::duration_cast<ms>(end-start).count() << std::endl;
 					   return std::chrono::duration_cast<ms>(end - start);
 					   });*/
-	for (int i = 0; i < (testTime << 1); i++) {
+	for (auto i = 0; i < (testTime << 1); i++) {
 		std::copy(temp.begin(), temp.end(), data);
-		auto start = clock::now();
+		start = clock::now();
 		sortF(data, data + length);
-		auto end = clock::now();
+		end = clock::now();
         std::cout << std::chrono::duration_cast<ms>(end - start).count() << std::endl;
 		results.push_back(std::chrono::duration_cast<ms>(end - start));
 		}

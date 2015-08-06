@@ -274,46 +274,65 @@ rightLoad MACRO src
     columnPermute 2, 18
 ENDM
 
-leftHalfGather MACRO  ;load sorted 32 items to left four columns
-    vpxor	   wmm6, wmm6, wmm6
-    vpxor 	   wmm7, wmm7, wmm7
-    vpcmpeqd   wmm6, wmm6, wmm5
-    vpcmpeqd   wmm7, wmm7, wmm5
-    vpgatherdd ymm0, [rax + wmm4 * 8],       wmm6
-    vpcmpeqd   wmm6, wmm6, wmm5
-    vpgatherdd ymm1, [rax + wmm4 * 8 + 4],   wmm7
-    vpcmpeqd   wmm7, wmm7, wmm5
-    vpgatherdd ymm2, [rax + wmm4 * 8 + 8],   wmm6
-    vpcmpeqd   wmm6, wmm6, wmm5
-    vpgatherdd ymm3, [rax + wmm4 * 8 + 12],  wmm7
-    vpcmpeqd   wmm7, wmm7, wmm5
-    vpgatherdd ymm4, [rax + wmm4 * 8 + 16],  wmm6
-    vpcmpeqd   wmm6, wmm6, wmm5
-    vpgatherdd ymm5, [rax + wmm4 * 8 + 20],  wmm7
-    vpcmpeqd   wmm7, wmm7, wmm5
-    vpgatherdd ymm6, [rax + wmm4 * 8 + 24],  wmm6
-    vpgatherdd ymm7, [rax + wmm4 * 8 + 28],  wmm7
+columnGather MACRO src, index, mask
+    vmovdqa    wmm4, ymmword ptr [index]
+    vmovdqa    wmm5, ymmword ptr [mask]
+    vpor       wmm6, wmm6, wmm5
+    vpor       wmm7, wmm7, wmm5
+    i = 0
+    while i LT 6
+        vpgatherdd @catstr(ymm, %i), [src + wmm4 * 8 + 4 * i], wmm6
+        vpor   wmm6, wmm6, wmm5
+        vpgatherdd @catstr(ymm, %(i + 1)), [src + wmm4 * 8 + 4 * (i + 1)], wmm7
+        vpor   wmm7, wmm7, wmm5
+        i = i + 2
+    endm
+    vpgatherdd ymm6, [src + wmm4 * 8 + 24],  wmm6
+    vpgatherdd ymm7, [src + wmm4 * 8 + 28],  wmm7
 ENDM
 
-rightHalfGather MACRO  ;load sorted 32 items to right four columns
-    vpxor	   wmm6, wmm6, wmm6
-    vpxor 	   wmm7, wmm7, wmm7
-    vpor       wmm6, wmm6, wmm5
-    vpor   	   wmm7, wmm7, wmm5
-    vpgatherdd ymm0, [rax + wmm4 * 8],       wmm6
-    vpor       wmm6, wmm6, wmm5
-    vpgatherdd ymm1, [rax + wmm4 * 8 + 4],   wmm7
-    vpor       wmm7, wmm7, wmm5
-    vpgatherdd ymm2, [rax + wmm4 * 8 + 8],   wmm6
-    vpor       wmm6, wmm6, wmm5
-    vpgatherdd ymm3, [rax + wmm4 * 8 + 12],  wmm7
-    vpor       wmm7, wmm7, wmm5
-    vpgatherdd ymm4, [rax + wmm4 * 8 + 16],  wmm6
-    vpor       wmm6, wmm6, wmm5
-    vpgatherdd ymm5, [rax + wmm4 * 8 + 20],  wmm7
-    vpor       wmm7, wmm7, wmm5
-    vpgatherdd ymm6, [rax + wmm4 * 8 + 24],  wmm6
-    vpgatherdd ymm7, [rax + wmm4 * 8 + 28],  wmm7
+leftHalfGather MACRO src  ;load sorted 32 items to left four columns
+    ;vpxor	   wmm6, wmm6, wmm6
+    ;vpxor 	   wmm7, wmm7, wmm7
+    ;vpcmpeqd   wmm6, wmm6, wmm5
+    ;vpcmpeqd   wmm7, wmm7, wmm5
+    ;vpgatherdd ymm0, [src + wmm4 * 8],       wmm6
+    ;vpcmpeqd   wmm6, wmm6, wmm5
+    ;vpgatherdd ymm1, [src + wmm4 * 8 + 4],   wmm7
+    ;vpcmpeqd   wmm7, wmm7, wmm5
+    ;vpgatherdd ymm2, [src + wmm4 * 8 + 8],   wmm6
+    ;vpcmpeqd   wmm6, wmm6, wmm5
+    ;vpgatherdd ymm3, [src + wmm4 * 8 + 12],  wmm7
+    ;vpcmpeqd   wmm7, wmm7, wmm5
+    ;vpgatherdd ymm4, [src + wmm4 * 8 + 16],  wmm6
+    ;vpcmpeqd   wmm6, wmm6, wmm5
+    ;vpgatherdd ymm5, [src + wmm4 * 8 + 20],  wmm7
+    ;vpcmpeqd   wmm7, wmm7, wmm5
+    ;vpgatherdd ymm6, [src + wmm4 * 8 + 24],  wmm6
+    ;vpgatherdd ymm7, [src + wmm4 * 8 + 28],  wmm7
+    columnGather src, lindex, lmask
+ENDM
+
+rightHalfGather MACRO src  ;load sorted 32 items to right four columns
+    ;vpxor	   wmm6, wmm6, wmm6
+    ;vpxor 	   wmm7, wmm7, wmm7
+    ;vpor       wmm6, wmm6, wmm5
+    ;vpor   	   wmm7, wmm7, wmm5
+    ;vpgatherdd ymm0, [src + wmm4 * 8],       wmm6
+    ;vpor       wmm6, wmm6, wmm5
+    ;vpgatherdd ymm1, [src + wmm4 * 8 + 4],   wmm7
+    ;vpor       wmm7, wmm7, wmm5
+    ;vpgatherdd ymm2, [src + wmm4 * 8 + 8],   wmm6
+    ;vpor       wmm6, wmm6, wmm5
+    ;vpgatherdd ymm3, [src + wmm4 * 8 + 12],  wmm7
+    ;vpor       wmm7, wmm7, wmm5
+    ;vpgatherdd ymm4, [src + wmm4 * 8 + 16],  wmm6
+    ;vpor       wmm6, wmm6, wmm5
+    ;vpgatherdd ymm5, [src + wmm4 * 8 + 20],  wmm7
+    ;vpor       wmm7, wmm7, wmm5
+    ;vpgatherdd ymm6, [src + wmm4 * 8 + 24],  wmm6
+    ;vpgatherdd ymm7, [src + wmm4 * 8 + 28],  wmm7
+    columnGather src, rindex, rmask
 ENDM
 
 end3Sort MACRO ;last three step in each stage
@@ -380,6 +399,9 @@ sort32_64p MACRO
     compareInOrder wmm, ymm, 1
 ENDM
 
+    ;; sort array to 64-len blocks, if data array is longer than 64, save
+    ;; intermediate results, else save ultimate results.
+    ;; use partial transport or end transport.
 AVXBitonicSortMacro MACRO stage
     local Sort
 Sort:	
@@ -496,16 +518,60 @@ CLoopJudge:
     ja    CMergeLoop
 ENDM
 
+MergeUseAVXMacro MACRO dload, dstore
+    local start, chooseleft, chooseright, loading, end, onlycopy, mayend
+    right&dload& rcx
+    add  rcx,  128              ;rcx must greater than rdx
+start:
+    cmp  rcx,  rdx
+    je   mayend
+    mov  r10d, dword ptr [rcx]
+    cmp  r8,   r9
+    je   chooseleft
+    mov  r11d, dword ptr [r8]
+    cmp  r10d, r11d
+    jg   chooseright
+chooseleft:
+    mov  rax,  rcx
+    add  rcx,  128
+    jmp  loading
+chooseright:
+    mov  rax,  r8
+    add  r8,   128
+    jmp  loading
+mayend:
+    cmp  r8,   r9
+    je   end
+    jmp  chooseright
+loading:
+    mov  r10d, dword ptr [rax]
+    vextracti128 xmm15, ymm7, 1
+    pextrd r11d, xmm15, 3
+    cmp  r10d, r11d
+    jge  onlycopy
+    left&dload& rax
+    sort32_64p
+    left&dstore& rbx
+    add  rbx,  128
+    jmp  start
+onlycopy:
+    right&dstore& rbx
+    add  rbx,  128
+    right&dload& rax
+    jmp  start
+end:    
+    right&dstore& rbx
+ENDM
 
 
 .data
 ;align 32
 CPUAVXSORT SEGMENT ALIGN(32) 'DATA'
-invertp dword 7, 6, 5, 4, 3, 2, 1, 0
+invertp dword 7, 6, 5, 4,  3, 2, 1, 0
 lindex  dword 0, 4, 8, 12, 0, 0, 0, 0
 rindex  dword 0, 0, 0, 0, 0, 4, 8, 12
-masknum dword 0, 0, 0, 0, 80000000h, 80000000h, 80000000h, 80000000h
-masklf  dword 80000000h, 80000000h, 80000000h, 80000000h, 0, 0, 0, 0
+lmask   dword 80000000h, 80000000h, 80000000h, 80000000h, 0, 0, 0, 0
+rmask   dword 0, 0, 0, 0, 80000000h, 80000000h, 80000000h, 80000000h
 CPUAVXSORT ENDS
 
 .code
@@ -513,6 +579,8 @@ CPUAVXSORT ENDS
 ;rcx input address, rdx output address, r8 total length which is already 
 ;divided by 64
 ;align 32
+    ;; sort the data array which is out-of-order to sorted blocks each of which
+    ;; has 64 items.
 AVXBitonicSort PROC
     cmp r8, 1
     je  OnlyOne
@@ -546,6 +614,7 @@ AVXMergeSortEnd ENDP
 
 ;rcx input address, rdx output address, r8 length of copy bytes
 ;align 32
+    ;; TODO: try to elimitate only copy.
 OddCopy PROC
     mov rax,  r8
     shr rax,  6
@@ -560,8 +629,10 @@ CopyLoop:
 OddCopy ENDP
 
 ;rcx input address, rdx output address, r8 total length
-;align 32
-CoreSortStage1 PROC uses rbx r12 r13 r14 r15 ;r9 r10 r11 rbp rdi rsi rcx rdx r8 rax r14 
+                                ;align 32
+    ;; first stage of merge sort. first sort array to 64-len blocks,
+    ;; then merge blocks to longer and longer.
+CoreSortStage1 PROC uses rbx r12 r13 r14 r15
     sub   rsp, 28h
     shr   r8,  6  		;divide by 64
     mov   r12, rcx		;input address backup
@@ -617,9 +688,86 @@ CTerminal:
 CoreSortStage1 ENDP
 
 ;align 32
-CoreSortStage2 PROC
-CoreSortStage2 ENDP
+;CoreSortStage2 PROC
+;CoreSortStage2 ENDP
+
+;; rcx input 1 begin, rdx input 1 end, r8 input 2 begin, r9 input 2 end,
+;; stack rsp + 28h output begin, 30h whether first calling,
+;; 38h whether last calling.
+;; TODO: stage of load and store of left and right may different. modify this.
+MergeUseAVX PROC uses rbx
+    mov  rbx,  qword ptr [rsp + 30h]
+    ;mov  rax,  rbx
+    ;jmp  mergeavxend
+    ;xor  rax, rax
+    mov  al,   byte ptr [rsp + 38h]
+    mov  r10b, byte ptr [rsp + 40h]
+    cmp  al,   1
+    je   mergeavxfirst
+    cmp  r10b, 1
+    je   mergeavxlast
+    MergeUseAVXMacro Load, PartialTransport
+    jmp  mergeavxend
+mergeavxlast:
+    MergeUseAVXMacro Load, EndTransport
+    jmp  mergeavxend
+mergeavxfirst:
+    cmp  r10b, 1
+    je   mergeavxfirstlast
+    MergeUseAVXMacro HalfGather, PartialTransport
+    jmp  mergeavxend
+mergeavxfirstlast:
+    MergeUseAVXMacro HalfGather, EndTransport
+mergeavxend:    
+    ;xor  rax,  rax
+    ;mov  al,  byte ptr [rsp + 38h]
+    ;add  al,  byte ptr [rsp + 40h]
+    ret
+MergeUseAVX ENDP
+
+;rcx input array begin, rdx input array end, r8 output array begin, return
+;output array end.
+CopyUseAVX PROC
+    mov  rax, rdx
+    sub  rax, rcx
+copystart:
+    cmp  rax, 512
+    jge  copyfull
+    cmp  rax, 384
+    jge  copythreequater
+    cmp  rax, 256
+    jge  copyhalf
+    dataLoad  rcx, ymm, <0, 1, 2, 3>
+    dataStore ymm, r8,  <0, 1, 2, 3>
+    add  rcx, 128
+    add  r8,  128
+    sub  rax, 128
+    jmp  copysub
+copyhalf:   
+    dataLoad  rcx, ymm, <0, 1, 2, 3, 4, 5, 6, 7>
+    dataStore ymm, r8,  <0, 1, 2, 3, 4, 5, 6, 7>
+    add  rcx, 256
+    add  r8,  256
+    sub  rax, 256
+    jmp  copysub
+copythreequater:
+    dataLoad  rcx, ymm, <0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11>
+    dataStore ymm, r8,  <0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11>
+    add  rcx, 384
+    add  r8,  384
+    sub  rax, 384
+    jmp  copysub
+copyfull:
+    dataLoad  rcx, ymm, <0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15>
+    dataStore ymm, r8,  <0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15>
+    add  rcx, 512
+    add  r8,  512
+    sub  rax, 512
+copysub:
+    cmp  rcx, rdx
+    jb   copystart
+    mov  rax, r8
+    ret
+CopyUseAVX ENDP
 
 end
-
-

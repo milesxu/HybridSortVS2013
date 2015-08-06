@@ -38,5 +38,6 @@
 
 
 // TODO:  在此处引用程序需要的其他头文件
-
+typedef std::vector<int, boost::alignment::aligned_allocator<int, 32>> 
+aligened_vector;
 
