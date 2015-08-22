@@ -13,6 +13,7 @@
 //#include <stdio.h>
 #include <tchar.h>
 #include <omp.h>
+#include <fstream>
 #include <iostream>
 #include <random>
 #include <unordered_set>
@@ -32,12 +33,14 @@
 #include <map>
 #include <boost/iterator/counting_iterator.hpp>
 #include <boost/align/aligned_allocator.hpp>
+#include <boost/sort/spreadsort/spreadsort.hpp>
 
 #include <windows.h>
 
 
 
 // TODO:  在此处引用程序需要的其他头文件
+#define THREADS 8
 typedef std::vector<int, boost::alignment::aligned_allocator<int, 32>> 
 aligened_vector;
 

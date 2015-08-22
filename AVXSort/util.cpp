@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "util.h"
+#include "CPUSort.h"
 
 
 DataHelper::DataHelper(unsigned long seed, size_t N, size_t low, size_t high,
@@ -141,7 +142,7 @@ void resultTiming(int testTime, int *data, size_t length,
     std::cout << std::endl;
 }
 
-void resultTimingWin(int testTime, int *data, size_t length,
+int_fast64_t resultTimingWin(int testTime, int *data, size_t length,
 				  std::function<void (int *, int *)> sortF)
 {
 	std::vector<int> temp(data, data + length);
@@ -160,13 +161,75 @@ void resultTimingWin(int testTime, int *data, size_t length,
 					   elapsed.QuadPart = end.QuadPart - start.QuadPart;
 					   elapsed.QuadPart *= 1000000;
 					   elapsed.QuadPart /= frequency.QuadPart;
-					   std::cout << elapsed.QuadPart << std::endl;
+					   //std::cout << elapsed.QuadPart << std::endl;
 					   return elapsed.QuadPart;
 				   });
 	std::nth_element(results.begin(), results.begin() + testTime, results.end());
 	int_fast64_t sum = std::accumulate(results.begin(),
 									   results.begin() + testTime, 0);
 	sum /= testTime;
-	std::cout << "function average running time(in microseconds): " << sum
-			  << std::endl;
+/*	std::cout << "function average running time(in microseconds): " << sum
+			  << std::endl;*/
+    return sum;
+}
+
+
+void sortTest(int start, int end, int test_time_i)
+{
+    std::fstream result("D:\\result.txt", std::ios::app);
+    for (auto i = start; i <= end; i *= 2)
+    {
+        auto input = static_cast<int *>(_mm_malloc(i * sizeof(int), 32));
+        DataHelper dh(201412042120150820, i, 0, i * 2, true);
+        dh.generateData(input, 0);
+        result << i << " "
+            //<< resultTimingWin(test_time_i, input, i, std::sort<int *>)
+            //<< resultTimingWin(test_time_i, input, i, 
+            //boost::sort::spreadsort::spreadsort<int *>)
+            << resultTimingWin(test_time_i, input, i, AVXSort)
+            << std::endl;
+        dh.checkResult(input);
+        _mm_free(input);
+    }
+}
+
+void copyTest(int length, int test_time_i)
+{
+    LARGE_INTEGER start, end, elapsed, frequency;
+    QueryPerformanceFrequency(&frequency);
+    auto input = static_cast<int *>(_mm_malloc(length * sizeof(int), 32));
+    DataHelper dh(201412042120150820, length, 0, length * 2, 0);
+    dh.generateData(input, 0);
+    std::vector<int_fast64_t> results;
+    for (auto i = 0; i < test_time_i * 3; i++)
+    {
+        auto temp = static_cast<int *>(_mm_malloc(length * sizeof(int), 32));
+        QueryPerformanceCounter(&start);
+        //std::copy(input, input + length, temp);
+        //CopyUseAVX(input, input + length, temp);
+        auto unitLen = (length >> 10);
+#pragma omp parallel for num_threads(8) schedule(dynamic)
+        for (auto j = 0; j < length; j += unitLen)
+        {
+            auto tin = input + j;
+            //std::copy(tin, tin + unitLen, temp + j);
+            CopyUseAVX(tin, tin + unitLen, temp + j);
+        }
+        QueryPerformanceCounter(&end);
+        elapsed.QuadPart = end.QuadPart - start.QuadPart;
+        elapsed.QuadPart *= 1000000;
+        elapsed.QuadPart /= frequency.QuadPart;
+        results.push_back(elapsed.QuadPart);
+        _mm_free(temp);
+    }
+    std::nth_element(results.begin(), results.begin() + test_time_i, 
+        results.end());
+    int_fast64_t sum = std::accumulate(results.begin(),
+        results.begin() + test_time_i, 0);
+    sum /= test_time_i;
+    std::ofstream test("D:\\result.txt", std::ios::app);
+    test << length << " " << sum << std::endl;
+    //test.flush();
+    //test.close();
+    _mm_free(input);
 }

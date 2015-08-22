@@ -61,23 +61,16 @@ int _tmain(int argc, _TCHAR* argv[])
 {
     const auto N = 1 << 16;
     //const auto arr = rUnit;
-    auto input = static_cast<int *>(_mm_malloc(N * sizeof(int), 32));
-    DataHelper dh(2014120421, N, 0, N * 2, true);
-    dh.generateData(input);
-    //std::cout << "sort begin" << std::endl;
+    sortTest(1 << 20, 1 << 26, 10);
+    //copyTest(1 << 28, 10);
     //AVXSort(input, N);
     //AVXBitonicSort(input, input, N >> 6);
-	//resultTiming(5, input, N, std::sort<int *>);
-	//resultTimingWin(5, input, N, std::sort<int *>);
-	//resultTimingWin(5, input, N, AVXSort);
-	ompAVXSort(input, input + N);
-    dh.checkResult(input);
+	//ompAVXSort(input, input + N);
+    //boost::sort::spreadsort::spreadsort(input, input + N);
     //avxParamTest();
     //avxMergeTest();
     std::cout << "sort complete." << std::endl;
-    extractTest();
+    //extractTest();
     //dh.outputData(input);
-    _mm_free(input);
-
     return 0;
 }

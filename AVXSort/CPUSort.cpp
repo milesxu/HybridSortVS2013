@@ -209,65 +209,6 @@ void eraseItem(int key, int row, std::multimap<int, int, compare>& qPair)
     qPair.erase(iter);
 }
 
-//TODO: do we need to know the bounds of data lists?
-void adjustAlignment(int* arr, std::vector<std::vector<int>>& quantile,
-                     int row)
-{
-    auto chunkNum = quantile[0].size();
-    const auto f = 32;
-    std::multimap<int, std::pair<int, int>> head;
-    align_vector left, right;
-    left.reserve(chunkNum * f);
-    right.reserve(chunkNum * f);
-    for (size_t i = 0; i < quantile[0].size(); i++)
-    {
-        auto start = quantile[row - 1][i], end = quantile[row][i];
-        if (start < end)
-        {
-            auto temp = end & (~(f - 1));
-            if (temp < end)
-            {
-                head.emplace(arr[temp - 1], std::make_pair(temp, i));
-                auto llen = left.size();
-                std::copy(arr + temp, arr + end, std::back_inserter(left));
-                if (llen)
-                {
-                    std::inplace_merge(left.begin(), left.begin() + llen,
-                                       left.end());
-                }
-                auto rlen = right.size();
-                std::copy(arr + end, arr + temp + f, std::back_inserter(right));
-                if (rlen)
-                {
-                    std::inplace_merge(right.begin(), right.begin() + rlen,
-                                       right.end());
-                }
-            }
-        }
-    }
-    //TODO: if all below are correct and time consuming, copy can use avx/sse.
-    auto hiter = head.begin();
-    for (auto iter = left.begin(); iter < left.end(); iter += f)
-    {
-        std::copy(iter, iter + f, arr + hiter->second.first);
-        quantile[row][hiter->second.second] = hiter->second.first + f;
-        ++hiter;
-    }
-    std::multimap<int, std::pair<int, int>, std::greater<int>> tail;
-    std::for_each(hiter, head.end(), [&](std::pair<int, std::pair<int, int>> k)
-                  {
-                      tail.emplace(arr[k.second.first + f], 
-                          std::make_pair(k.second.first, k.second.second));
-                  });
-    auto titer = tail.begin();
-    for (auto iter = right.begin(); iter < right.end(); iter += f)
-    {
-        std::copy(iter, iter + f, arr + titer->second.first);
-        quantile[row][titer->second.second] = titer->second.first;
-        ++titer;
-    }
-}
-
 void quantileCompute(int* arr, int unitLen,
                      std::vector<std::vector<int>>& quantile)
 {
@@ -313,7 +254,6 @@ void quantileCompute(int* arr, int unitLen,
             lit = left.begin();
             rit = right.begin();
         }
-        //adjustAlignment(arr, quantile, i);
     }
 }
 
@@ -456,7 +396,7 @@ void multiwayMerge(int* ibegin, int* iend, int* obegin)
         std::sort(i.front().first, i.back().second);
         lpoint = std::copy(i.front().first, i.back().second, lpoint);
     }*/
-//#pragma omp parallel for num_threads(8) schedule(dynamic)
+#pragma omp parallel for num_threads(THREADS) schedule(dynamic)
     for (int i = 0; i < boundary_vectors.size(); i++)
     {
         boundary left, right(boundary_vectors[i]);
@@ -602,7 +542,7 @@ void ompAVXSort(int* begin, int* end)
     int byteLen = getUnitLengthPerCore() >> 2;
     //size_t unitLen = 64;
     //auto nthreads = 4;
-#pragma omp parallel for num_threads(8) schedule(dynamic)
+#pragma omp parallel for num_threads(THREADS) schedule(dynamic)
     for (auto i = 0; i < length; i += byteLen)
     {
         CoreSortStage1(begin + i, temp + i, byteLen);

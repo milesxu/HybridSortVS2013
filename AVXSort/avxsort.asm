@@ -292,46 +292,10 @@ columnGather MACRO src, index, mask
 ENDM
 
 leftHalfGather MACRO src  ;load sorted 32 items to left four columns
-    ;vpxor	   wmm6, wmm6, wmm6
-    ;vpxor 	   wmm7, wmm7, wmm7
-    ;vpcmpeqd   wmm6, wmm6, wmm5
-    ;vpcmpeqd   wmm7, wmm7, wmm5
-    ;vpgatherdd ymm0, [src + wmm4 * 8],       wmm6
-    ;vpcmpeqd   wmm6, wmm6, wmm5
-    ;vpgatherdd ymm1, [src + wmm4 * 8 + 4],   wmm7
-    ;vpcmpeqd   wmm7, wmm7, wmm5
-    ;vpgatherdd ymm2, [src + wmm4 * 8 + 8],   wmm6
-    ;vpcmpeqd   wmm6, wmm6, wmm5
-    ;vpgatherdd ymm3, [src + wmm4 * 8 + 12],  wmm7
-    ;vpcmpeqd   wmm7, wmm7, wmm5
-    ;vpgatherdd ymm4, [src + wmm4 * 8 + 16],  wmm6
-    ;vpcmpeqd   wmm6, wmm6, wmm5
-    ;vpgatherdd ymm5, [src + wmm4 * 8 + 20],  wmm7
-    ;vpcmpeqd   wmm7, wmm7, wmm5
-    ;vpgatherdd ymm6, [src + wmm4 * 8 + 24],  wmm6
-    ;vpgatherdd ymm7, [src + wmm4 * 8 + 28],  wmm7
     columnGather src, lindex, lmask
 ENDM
 
 rightHalfGather MACRO src  ;load sorted 32 items to right four columns
-    ;vpxor	   wmm6, wmm6, wmm6
-    ;vpxor 	   wmm7, wmm7, wmm7
-    ;vpor       wmm6, wmm6, wmm5
-    ;vpor   	   wmm7, wmm7, wmm5
-    ;vpgatherdd ymm0, [src + wmm4 * 8],       wmm6
-    ;vpor       wmm6, wmm6, wmm5
-    ;vpgatherdd ymm1, [src + wmm4 * 8 + 4],   wmm7
-    ;vpor       wmm7, wmm7, wmm5
-    ;vpgatherdd ymm2, [src + wmm4 * 8 + 8],   wmm6
-    ;vpor       wmm6, wmm6, wmm5
-    ;vpgatherdd ymm3, [src + wmm4 * 8 + 12],  wmm7
-    ;vpor       wmm7, wmm7, wmm5
-    ;vpgatherdd ymm4, [src + wmm4 * 8 + 16],  wmm6
-    ;vpor       wmm6, wmm6, wmm5
-    ;vpgatherdd ymm5, [src + wmm4 * 8 + 20],  wmm7
-    ;vpor       wmm7, wmm7, wmm5
-    ;vpgatherdd ymm6, [src + wmm4 * 8 + 24],  wmm6
-    ;vpgatherdd ymm7, [src + wmm4 * 8 + 28],  wmm7
     columnGather src, rindex, rmask
 ENDM
 
@@ -463,19 +427,34 @@ ENDM
 
 CoreSortStage1CallMacro MACRO stage
     ; push  rax
-    mov   rcx, r13
-    mov   rdx, r12
+    ;mov   rcx, r13
+    ;mov   rdx, r12
+    ;push  rbx
+    ;push  r10
+    ;push  r11
+    ;push  r12
+    ;sub   rsp, 28h
+    ; mov   dword ptr [rsp + 20h], eax
+    ;call  &stage
+    ;add   rsp, 28h
+    ;AVXMergeSortMacro &stage
+    ;pop   r12
+    ;pop   r11
+    ;pop   r10
+    ;pop   rbx
+    ; pop   rax
     push  rbx
     push  r10
     push  r11
-    sub   rsp, 28h
-    ; mov   dword ptr [rsp + 20h], eax
-    call  &stage
-    add   rsp, 28h
+    mov   rcx,  r13
+    add   r8,   r13
+    mov   rdx,  r8
+    add   r9,   r8
+    mov   rbx,  r12
+    MergeUseAVXMacro Load, &stage
     pop   r11
     pop   r10
     pop   rbx
-    ; pop   rax
 ENDM
 
 CoreSortStage1LoopMacro MACRO stage
@@ -503,10 +482,17 @@ CNormalMerge:
     sub   r11, 2
     jmp   CLoopJudge
 OnlyCopy:
-    mov   r8,  rcx
-    mov   rbx, r8
-    shr   r8,  2
-    CoreSortStage1CallMacro OddCopy
+    ;mov   rbx, rcx
+    ;mov   r8,  rcx
+    ;shr   r8,  2
+    ;CoreSortStage1CallMacro OddCopy
+    mov   rdx, rcx
+    mov   rcx, r13
+    add   rdx, r13
+    mov   r8,  r12
+    sub   rsp, 28h
+    call  CopyUseAVX
+    add   rsp, 28h
     sub   r11, 1
 CLoopJudge:
     inc   r14
@@ -665,10 +651,12 @@ FirstStep:
     cmp   r11, 2
     je    CoreSortLastTime
 CoreSortNormal:
-    CoreSortStage1LoopMacro AVXMergeSort
+    ;CoreSortStage1LoopMacro AVXMergeSort
+    CoreSortStage1LoopMacro PartialTransport
     jmp   AddressExchange
 CoreSortLastTime:
-    CoreSortStage1LoopMacro AVXMergeSortEnd
+    ;CoreSortStage1LoopMacro AVXMergeSortEnd
+    CoreSortStage1LoopMacro EndTransport
 AddressExchange:
     cmp   r14, 1
     je    CTerminal
