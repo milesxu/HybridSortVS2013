@@ -426,23 +426,6 @@ Terminal:
 ENDM
 
 CoreSortStage1CallMacro MACRO stage
-    ; push  rax
-    ;mov   rcx, r13
-    ;mov   rdx, r12
-    ;push  rbx
-    ;push  r10
-    ;push  r11
-    ;push  r12
-    ;sub   rsp, 28h
-    ; mov   dword ptr [rsp + 20h], eax
-    ;call  &stage
-    ;add   rsp, 28h
-    ;AVXMergeSortMacro &stage
-    ;pop   r12
-    ;pop   r11
-    ;pop   r10
-    ;pop   rbx
-    ; pop   rax
     push  rbx
     push  r10
     push  r11
@@ -482,10 +465,6 @@ CNormalMerge:
     sub   r11, 2
     jmp   CLoopJudge
 OnlyCopy:
-    ;mov   rbx, rcx
-    ;mov   r8,  rcx
-    ;shr   r8,  2
-    ;CoreSortStage1CallMacro OddCopy
     mov   rdx, rcx
     mov   rcx, r13
     add   rdx, r13
@@ -577,42 +556,6 @@ OnlyOne:
 ABTerminal:
     ret
 AVXBitonicSort ENDP
-
-;rcx input address, rdx output address, r8 length of one list, r9 length of 
-;the other list
-;align 32
-AVXMergeSort PROC uses r12		
-    ; shl     r8,   2  	;byte length of input 1
-    ; shl     r9,   2	;byte length of input 2 which follow input 1
-    AVXMergeSortMacro PartialTransport
-    ret
-AVXMergeSort ENDP
-
-;rcx input address, rdx output address, r8 length of one list, r9 length of 
-;the other list, the last time in loop
-;align 32
-AVXMergeSortEnd PROC uses r12		
-    ; shl     r8,   2  	;byte length of input 1
-    ; shl     r9,   2	;byte length of input 2 which follow input 1
-    AVXMergeSortMacro EndTransport
-    ret
-AVXMergeSortEnd ENDP
-
-;rcx input address, rdx output address, r8 length of copy bytes
-;align 32
-    ;; TODO: try to elimitate only copy.
-OddCopy PROC
-    mov rax,  r8
-    shr rax,  6
-CopyLoop:
-    fullLoadY  rcx
-    fullStoreY rdx
-    add rcx,  256
-    add rdx,  256
-    dec rax
-    jnz CopyLoop
-    ret
-OddCopy ENDP
 
 ;rcx input address, rdx output address, r8 total length
                                 ;align 32

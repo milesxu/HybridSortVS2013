@@ -25,3 +25,4 @@ int_fast64_t resultTimingWin(int testTime, int *data, size_t length,
 				  std::function<void (int *, int *)> sortF);
 void sortTest(int start, int end, int test_time_i);
 void copyTest(int length, int test_time_i);
+void avxCopyCorrectTest(int length);

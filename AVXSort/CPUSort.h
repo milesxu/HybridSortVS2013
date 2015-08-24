@@ -22,4 +22,4 @@ extern "C"
 
 void AVXSort(int *begin, int *start);
 void ompAVXSort(int *begin, int *end);
-
+void recursiveMultiwayMerge(int *begin, int *end);

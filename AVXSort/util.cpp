@@ -180,15 +180,17 @@ void sortTest(int start, int end, int test_time_i)
     for (auto i = start; i <= end; i *= 2)
     {
         auto input = static_cast<int *>(_mm_malloc(i * sizeof(int), 32));
-        DataHelper dh(201412042120150820, i, 0, i * 2, true);
+        DataHelper dh(201412042120150820, i, 0, i * 2, 0);
         dh.generateData(input, 0);
         result << i << " "
             //<< resultTimingWin(test_time_i, input, i, std::sort<int *>)
             //<< resultTimingWin(test_time_i, input, i, 
             //boost::sort::spreadsort::spreadsort<int *>)
-            << resultTimingWin(test_time_i, input, i, AVXSort)
+            //<< resultTimingWin(test_time_i, input, i, AVXSort)
+            << resultTimingWin(test_time_i, input, i, ompAVXSort)
+            //<< resultTimingWin(test_time_i, input, i, recursiveMultiwayMerge)
             << std::endl;
-        dh.checkResult(input);
+        //dh.checkResult(input);
         _mm_free(input);
     }
 }
@@ -232,4 +234,29 @@ void copyTest(int length, int test_time_i)
     //test.flush();
     //test.close();
     _mm_free(input);
+}
+
+void avxCopyCorrectTest(int length)
+{
+    auto input = static_cast<int *>(_mm_malloc(length * sizeof(int), 32));
+    auto temp = static_cast<int *>(_mm_malloc(length * sizeof(int), 32));
+    DataHelper dh(201412042120150820, length, 0, length * 2, 0);
+    dh.generateData(input, 0);
+    auto iter = CopyUseAVX(input, input + length, temp);
+    if (iter - temp != length)
+    {
+        std::cout << "copy length error!" << std::endl;
+        return;
+    }
+    for (auto i = 0; i < length; i++)
+    {
+        if (input[i] != temp[i])
+        {
+            std::cout << "copy item error at " << i << std::endl;
+            return;
+        }
+    }
+    std::cout << "avx copy test success!" << std::endl;
+    _mm_free(input);
+    _mm_free(temp);
 }

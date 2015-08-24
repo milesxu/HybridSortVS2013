@@ -10,6 +10,7 @@ void avxParamTest()
     auto e = new int(5);
     auto h = true;
     std::cout << e << std::endl;
+    MergeUseAVX(a, b, c, d, e, false, h);
     //std::cout << *MergeUseAVX(a, b, c, d, e, false, true) << std::endl;
     /*if (MergeUseAVX(a, b, c, d, e))
     {
@@ -57,18 +58,29 @@ void extractTest()
     std::cout << end << std::endl;
 }
 
-int _tmain(int argc, _TCHAR* argv[])
+void ompAVXSortCorrectTest()
 {
-    const auto N = 1 << 16;
+    const auto N = 1 << 20;
+    auto input = static_cast<int *>(_mm_malloc(N * sizeof(int), 32));
+    DataHelper dh(201412042120150820, N, 0, N * 2, true);
+    dh.generateData(input, 0);
+    ompAVXSort(input, input + N);
+    dh.checkResult(input);
+    _mm_free(input);
+}
+
+int _tmain(int argc, _TCHAR* argv[])
+{    
     //const auto arr = rUnit;
-    sortTest(1 << 20, 1 << 26, 10);
+    sortTest(1 << 20, 1 << 30, 5);
     //copyTest(1 << 28, 10);
     //AVXSort(input, N);
     //AVXBitonicSort(input, input, N >> 6);
-	//ompAVXSort(input, input + N);
     //boost::sort::spreadsort::spreadsort(input, input + N);
     //avxParamTest();
     //avxMergeTest();
+    //ompAVXSortCorrectTest();
+    //avxCopyCorrectTest(1 << 20);
     std::cout << "sort complete." << std::endl;
     //extractTest();
     //dh.outputData(input);
